@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            padding: 0;
+            color: #262626;
+        }
+        .container {
+            max-width: 935px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #dbdbdb;
+        }
+        .navbar-logo {
+            height: 29px;
+        }
+        .chat-container {
+            display: flex;
+            height: calc(100vh - 100px);
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .chat-list {
+            width: 350px;
+            border-right: 1px solid #dbdbdb;
+            overflow-y: auto;
+        }
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .chat-item:hover {
+            background-color: #fafafa;
+        }
+        .chat-item img {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .chat-item-info {
+            flex-grow: 1;
+        }
+        .chat-item-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .chat-item-last-message {
+            font-size: 14px;
+            color: #8e8e8e;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 10px;
+            border-bottom: 1px solid #dbdbdb;
+            font-weight: 500;
+        }
+        .message-list {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .message {
+            max-width: 70%;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 18px;
+            font-size: 14px;
+        }
+        .message.sent {
+            align-self: flex-end;
+            background-color: #efefef;
+        }
+        .message.received {
+            align-self: flex-start;
+            background-color: #3897f0;
+            color: #fff;
+        }
+        .message-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #dbdbdb;
+        }
+        .message-input input {
+            flex-grow: 1;
+            border: none;
+            padding: 8px;
+            border-radius: 21px;
+            background-color: #efefef;
+        }
+        .message-input button {
+            background-color: transparent;
+            border: none;
+            color: #3897f0;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+        .button {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <img src="https://www.instagram.com/static/images/web/mobile_nav_type_logo.png/735145cfe0a4.png" alt="Instagram" class="navbar-logo">
+        <a href="index.html" class="button">Profile</a>
+    </nav>
+    <div class="container">
+        <div class="chat-container">
+            <div class="chat-list" id="chatList"></div>
+            <div class="chat-messages">
+                <div class="chat-header" id="chatHeader">Select a chat</div>
+                <div class="message-list" id="messageList"></div>
+                <div class="message-input">
+                    <input type="text" id="messageInput" placeholder="Type a message...">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chats = [];
+        let currentChat = null;
+
+        function loadFromLocalStorage() {
+            chats = JSON.parse(localStorage.getItem('chats')) || [
+                { id: 1, name: 'John Doe', avatar: 'https://via.placeholder.com/56', messages: [] },
+                { id: 2, name: 'Jane Smith', avatar: 'https://via.placeholder.com/56', messages: [] },
+                { id: 3, name: 'Bob Johnson', avatar: 'https://via.placeholder.com/56', messages: [] }
+            ];
+            updateChatList();
+        }
+
+        function updateChatList() {
+            const chatList = document.getElementById('chatList');
+            chatList.innerHTML = '';
+            chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                chatItem.innerHTML = `
+                    <img src="${chat.avatar}" alt="${chat.name}">
+                    <div class="chat-item-info">
+                        <div class="chat-item-name">${chat.name}</div>
+                        <div class="chat-item-last-message">${chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].text : 'No messages yet'}</div>
+                    </div>
+                `;
+                chatItem.onclick = () => openChat(chat);
+                chatList.appendChild(chatItem);
+            });
+        }
+
+        function openChat(chat) {
+            currentChat = chat;
+            document.getElementById('chatHeader').textContent = chat.name;
+            updateMessageList();
+        }
+
+        function updateMessageList() {
+            const messageList = document.getElementById('messageList');
+            messageList.innerHTML = '';
+            currentChat.messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${message.sent ? 'sent' : 'received'}`;
+                messageElement.textContent = message.text;
+                messageList.appendChild(messageElement);
+            });
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+            if (messageText && currentChat) {
+                currentChat.messages.push({ text: messageText, sent: true });
+                updateMessageList();
+                updateChatList();
+                localStorage.setItem('chats', JSON.stringify(chats));
+                messageInput.value = '';
+                
+                // Simulate received message
+                setTimeout(() => {
+                    currentChat.messages.push({ text: 'This is a simulated response.', sent: false });
+                    updateMessageList();
+                    updateChatList();
+                    localStorage.setItem('chats', JSON.stringify(chats));
+                }, 1000);
+            }
+        }
+
+        window.onload = loadFromLocalStorage;
+    </script>
+</body>
+</html>

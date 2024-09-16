@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            padding: 0;
+            color: #262626;
+            line-height: 1.6;
+            font-size: 14px; /* Base font size */
+        }
+        .container {
+            max-width: 935px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-right: 100px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .profile-picture:hover {
+            transform: scale(1.05);
+        }
+        .profile-info h1 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 16px;
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .profile-stats {
+            display: flex;
+            margin-bottom: 24px;
+        }
+        .stat {
+            margin-right: 50px;
+            font-size: 16px;
+        }
+        .stat strong {
+            font-weight: 600;
+        }
+        .profile-bio {
+            max-width: 400px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .profile-bio strong {
+            font-weight: 600;
+        }
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+        }
+        .post-item {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .post-item:hover {
+            transform: translateY(-5px);
+        }
+        .post-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .post-item:hover img {
+            transform: scale(1.05);
+        }
+        .delete-button, .like-button, .save-button {
+            position: absolute;
+            top: 12px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .delete-button {
+            right: 12px;
+        }
+        .like-button {
+            left: 12px;
+        }
+        .save-button {
+            right: 50px;
+        }
+        .post-item:hover .delete-button,
+        .post-item:hover .like-button,
+        .post-item:hover .save-button {
+            display: flex;
+        }
+        .delete-button:hover,
+        .like-button:hover,
+        .save-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+            transform: scale(1.1);
+        }
+        .post-form {
+            margin-bottom: 36px;
+        }
+        .post-form input[type="file"] {
+            margin-right: 15px;
+        }
+        .button {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .button:hover {
+            background-color: #0081d6;
+            transform: translateY(-2px);
+        }
+        .edit-profile {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 28px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+        }
+        .edit-profile input, .edit-profile textarea, .edit-profile select {
+            width: 100%;
+            margin-bottom: 18px;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        .edit-profile input:focus, .edit-profile textarea:focus, .edit-profile select:focus {
+            border-color: #0095f6;
+            outline: none;
+        }
+        .edit-profile textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+        .edit-profile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 999;
+        }
+        a {
+            color: #00376b;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        a:hover {
+            color: #0095f6;
+            text-decoration: underline;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background-color: #fff;
+            border-bottom: 1px solid #dbdbdb;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .navbar-logo {
+            height: 30px;
+        }
+        .navbar-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        .like-count {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .post-date {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .post-item:hover .post-date {
+            opacity: 1;
+        }
+        .verified-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233897f0"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7l-3.5-3.5 1.4-1.4 2.1 2.1 4.9-4.9 1.4 1.4-6.3 6.3z"/></svg>');
+            background-size: contain;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
+        .username-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .upload-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #dbdbdb;
+            margin-top: 50px;
+        }
+        .footer-left {
+            text-align: left;
+        }
+        .footer-right {
+            text-align: right;
+        }
+        .footer p {
+            margin: 6px 0;
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+        .footer ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .footer li {
+            margin: 6px 0;
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <img src="https://www.instagram.com/static/images/web/mobile_nav_type_logo.png/735145cfe0a4.png" alt="Instagram" class="navbar-logo">
+        <div class="navbar-buttons">
+            <button class="button" onclick="toggleEditProfile()">Edit Profile</button>
+            <button class="button" onclick="increaseFollowers()">Follow</button>
+            <a href="reel.html" class="button">Reels</a>
+            <a href="chat.html" class="button">Messages</a>
+            <a href="save.html" class="button">Saved</a>
+        </div>
+    </nav>
+    <div class="container">
+        <header class="profile-header">
+            <img src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-picture" id="profilePicture">
+            <div class="profile-info">
+                <div class="username-container">
+                    <h1 id="username">username</h1>
+                    <span class="verified-icon"></span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat"><strong id="postCount">0</strong> posts</div>
+                    <div class="stat"><strong id="followerCount">0</strong> followers</div>
+                </div>
+                <div class="profile-bio">
+                    <strong id="fullName">Full Name</strong>
+                    <p id="bio">Bio description goes here. This is a sample Instagram profile page.</p>
+                    <p id="gender"></p>
+                    <p id="age"></p>
+                    <a href="#" id="website">www.website.com</a>
+                </div>
+            </div>
+        </header>
+        <div class="edit-profile-overlay" id="editProfileOverlay"></div>
+        <div class="edit-profile" id="editProfile" style="display: none;">
+            <input type="text" id="editUsername" placeholder="Username">
+            <input type="text" id="editFullName" placeholder="Full Name">
+            <textarea id="editBio" placeholder="Bio"></textarea>
+            <input type="text" id="editWebsite" placeholder="Website">
+            <select id="editGender">
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
+            <input type="number" id="editAge" placeholder="Age">
+            <input type="file" id="profilePictureInput" accept="image/*">
+            <button class="button" onclick="saveProfile()">Save Profile</button>
+            <button class="button" onclick="toggleEditProfile()" style="background-color: #dbdbdb; color: #262626;">Cancel</button>
+        </div>
+        <div class="upload-buttons">
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            <button class="button" onclick="document.getElementById('imageInput').click()">Upload Image</button>
+            <button class="button" onclick="postImage()">Post Image</button>
+        </div>
+        <div class="posts-grid" id="postsGrid"></div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-left">
+            <ul>
+                <li>* Images must be in JPG or PNG format only.</li>
+                <li>* Videos are not allowed.</li>
+                <li>* Respect copyright and intellectual property rights.</li>
+                <li>* No explicit or offensive content.</li>
+            </ul>
+        </div>
+        <div class="footer-right">
+            <p>&copy; 2024 Instagram Nitesh. All rights reserved.</p>
+            <p>Founder and CEO : Nitesh Patel</p>
+        </div>
+    </footer>
+
+    <script>
+        let posts = [];
+        let followers = 0;
+
+        function loadFromLocalStorage() {
+            const savedProfile = JSON.parse(localStorage.getItem('profile')) || {};
+            document.getElementById('username').textContent = savedProfile.username || 'username';
+            document.getElementById('fullName').textContent = savedProfile.fullName || 'Full Name';
+            document.getElementById('bio').textContent = savedProfile.bio || 'Bio description goes here. This is a sample Instagram profile page.';
+            document.getElementById('website').textContent = savedProfile.website || 'www.website.com';
+            document.getElementById('website').href = savedProfile.website || '#';
+            document.getElementById('gender').textContent = savedProfile.gender ? savedProfile.gender : '';
+            document.getElementById('age').textContent = savedProfile.age ? savedProfile.age : '';
+            if (savedProfile.profilePicture) {
+                document.getElementById('profilePicture').src = savedProfile.profilePicture;
+            }
+
+            posts = JSON.parse(localStorage.getItem('posts')) || [];
+            followers = parseInt(localStorage.getItem('followers')) || 0;
+            updatePostsGrid();
+            updateFollowerCount();
+        }
+
+        function updatePostsGrid() {
+            const postsGrid = document.getElementById('postsGrid');
+            postsGrid.innerHTML = '';
+            posts.forEach((post, index) => {
+                const postItem = document.createElement('div');
+                postItem.className = 'post-item';
+                postItem.innerHTML = `
+                    <img src="${post.imageUrl}" alt="Post">
+                    <button class="delete-button" onclick="deleteImage(${index})">&times;</button>
+                    <button class="like-button" onclick="likeImage(${index})">❤️</button>
+                    <button class="save-button" onclick="saveImage(${index})">🔖</button>
+                    <div class="like-count">${post.likes} likes</div>
+                    <div class="post-date">${post.uploadDate}</div>
+                `;
+                postsGrid.appendChild(postItem);
+            });
+            document.getElementById('postCount').textContent = posts.length;
+            localStorage.setItem('posts', JSON.stringify(posts));
+        }
+
+        function postImage() {
+            const input = document.getElementById('imageInput');
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const now = new Date();
+                    const uploadDate = now.toLocaleString();
+                    posts.unshift({
+                        imageUrl: e.target.result,
+                        likes: 0,
+                        uploadDate: uploadDate
+                    });
+                    localStorage.setItem('posts', JSON.stringify(posts));
+                    updatePostsGrid();
+                    input.value = ''; // Clear the input
+                }
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please select an image to post.');
+            }
+        }
+
+        function deleteImage(index) {
+            posts.splice(index, 1);
+            localStorage.setItem('posts', JSON.stringify(posts));
+            updatePostsGrid();
+        }
+
+        function likeImage(index) {
+            posts[index].likes = (posts[index].likes || 0) + 1;
+            localStorage.setItem('posts', JSON.stringify(posts));
+            updatePostsGrid();
+        }
+
+        function saveImage(index) {
+            const post = posts[index];
+            let savedPosts = JSON.parse(localStorage.getItem('savedPosts')) || [];
+            if (!savedPosts.some(savedPost => savedPost.imageUrl === post.imageUrl)) {
+                savedPosts.push(post);
+                localStorage.setItem('savedPosts', JSON.stringify(savedPosts));
+                alert('Post saved successfully!');
+            } else {
+                alert('This post is already saved.');
+            }
+        }
+
+        function toggleEditProfile() {
+            const editProfile = document.getElementById('editProfile');
+            const editProfileOverlay = document.getElementById('editProfileOverlay');
+            if (editProfile.style.display === 'none') {
+                editProfile.style.display = 'block';
+                editProfileOverlay.style.display = 'block';
+                const savedProfile = JSON.parse(localStorage.getItem('profile')) || {};
+                document.getElementById('editUsername').value = savedProfile.username || '';
+                document.getElementById('editFullName').value = savedProfile.fullName || '';
+                document.getElementById('editBio').value = savedProfile.bio || '';
+                document.getElementById('editWebsite').value = savedProfile.website || '';
+                document.getElementById('editGender').value = savedProfile.gender || '';
+                document.getElementById('editAge').value = savedProfile.age || '';
+            } else {
+                editProfile.style.display = 'none';
+                editProfileOverlay.style.display = 'none';
+            }
+        }
+
+        function saveProfile() {
+            const username = document.getElementById('editUsername').value;
+            const fullName = document.getElementById('editFullName').value;
+            const bio = document.getElementById('editBio').value;
+            const website = document.getElementById('editWebsite').value;
+            const gender = document.getElementById('editGender').value;
+            const age = document.getElementById('editAge').value;
+            const profilePicture = document.getElementById('profilePictureInput').files[0];
+
+            document.getElementById('username').textContent = username;
+            document.getElementById('fullName').textContent = fullName;
+            document.getElementById('bio').textContent = bio;
+            document.getElementById('website').textContent = website;
+            document.getElementById('website').href = website;
+            document.getElementById('gender').textContent = gender ? gender : '';
+            document.getElementById('age').textContent = age ? age : '';
+
+            const profile = { username, fullName, bio, website, gender, age };
+
+            if (profilePicture) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profilePicture').src = e.target.result;
+                    profile.profilePicture = e.target.result;
+                    localStorage.setItem('profile', JSON.stringify(profile));
+                }
+                reader.readAsDataURL(profilePicture);
+            } else {
+                localStorage.setItem('profile', JSON.stringify(profile));
+            }
+
+            toggleEditProfile();
+        }
+
+        function increaseFollowers() {
+            followers++;
+            localStorage.setItem('followers', followers);
+            updateFollowerCount();
+        }
+
+        function updateFollowerCount() {
+            document.getElementById('followerCount').textContent = followers;
+        }
+
+        window.onload = loadFromLocalStorage;
+    </script>
+</body>
+</html>

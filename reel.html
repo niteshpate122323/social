@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Reels</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+        }
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #000;
+            border-bottom: 1px solid #262626;
+        }
+        .navbar-logo {
+            height: 29px;
+        }
+        .reel-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+        }
+        .reel {
+            height: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            overflow: hidden;
+        }
+        .reel video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .reel-info {
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            right: 10px;
+        }
+        .reel-info h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .reel-info p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .reel-actions {
+            position: absolute;
+            right: 10px;
+            bottom: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .action-button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .upload-form {
+            padding: 10px;
+            background-color: #000;
+            border-top: 1px solid #262626;
+        }
+        .upload-form input[type="file"] {
+            display: none;
+        }
+        .button {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <img src="https://www.instagram.com/static/images/web/mobile_nav_type_logo.png/735145cfe0a4.png" alt="Instagram" class="navbar-logo">
+            <a href="index.html" class="button">Profile</a>
+        </nav>
+        <div class="reel-container" id="reelContainer"></div>
+        <div class="upload-form">
+            <input type="file" id="videoInput" accept="video/*">
+            <button class="button" onclick="document.getElementById('videoInput').click()">Select Video</button>
+            <button class="button" onclick="uploadReel()">Upload Reel</button>
+        </div>
+    </div>
+
+    <script>
+        let reels = [];
+        let currentPlayingVideo = null;
+
+        function loadFromLocalStorage() {
+            reels = JSON.parse(localStorage.getItem('reels')) || [];
+            updateReelsContainer();
+        }
+
+        function updateReelsContainer() {
+            const reelContainer = document.getElementById('reelContainer');
+            reelContainer.innerHTML = '';
+            reels.forEach((reel, index) => {
+                const reelElement = document.createElement('div');
+                reelElement.className = 'reel';
+                reelElement.innerHTML = `
+                    <video>
+                        <source src="${reel.videoUrl}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="reel-info">
+                        <h3>${reel.username}</h3>
+                    </div>
+                    <div class="reel-actions">
+                        <button class="action-button">❤️</button>
+                        <button class="action-button">💬</button>
+                        <button class="action-button">➡️</button>
+                    </div>
+                `;
+                reelContainer.appendChild(reelElement);
+                
+                const video = reelElement.querySelector('video');
+                video.addEventListener('loadedmetadata', () => {
+                    if (index === 0) {
+                        video.play().catch(e => console.error('Error playing video:', e));
+                        currentPlayingVideo = video;
+                    }
+                });
+                
+                video.addEventListener('error', (e) => {
+                    console.error('Error loading video:', e);
+                    video.insertAdjacentHTML('afterend', '<p>Error loading video. Please try again.</p>');
+                });
+                
+                video.addEventListener('click', () => {
+                    if (video.paused) {
+                        video.play().catch(e => console.error('Error playing video:', e));
+                    } else {
+                        video.pause();
+                    }
+                });
+            });
+
+            // Add intersection observer to handle video playback
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const video = entry.target.querySelector('video');
+                        if (currentPlayingVideo && currentPlayingVideo !== video) {
+                            currentPlayingVideo.pause();
+                        }
+                        video.play().catch(e => console.error('Error playing video:', e));
+                        currentPlayingVideo = video;
+                    } else {
+                        const video = entry.target.querySelector('video');
+                        video.pause();
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            document.querySelectorAll('.reel').forEach(reel => {
+                observer.observe(reel);
+            });
+        }
+
+        function uploadReel() {
+            const input = document.getElementById('videoInput');
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const username = JSON.parse(localStorage.getItem('profile'))?.username || 'username';
+                    const newReel = {
+                        videoUrl: e.target.result,
+                        username: username
+                    };
+                    reels.unshift(newReel);
+                    localStorage.setItem('reels', JSON.stringify(reels));
+                    updateReelsContainer();
+                    input.value = '';
+                    document.getElementById('reelContainer').scrollTop = 0;
+                }
+                reader.onerror = function(e) {
+                    console.error('Error reading file:', e);
+                    alert('Error reading file. Please try again.');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please select a video to upload.');
+            }
+        }
+
+        window.onload = loadFromLocalStorage;
+    </script>
+</body>
+</html>
